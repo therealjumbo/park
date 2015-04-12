@@ -1,2 +1,4 @@
 flask/*
 *.swp
+*__pycache__/
+
