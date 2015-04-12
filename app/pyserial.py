@@ -48,8 +48,8 @@ time TEXT)""")
 
 
     def read(self, sensor_id):
-        self.cursor.execute("SELECT * FROM parkinglot WHERE '\
-                            'location='%s'" % sensor_id)
+        self.cursor.execute("SELECT * FROM parkinglot WHERE "\
+                            "location='%s'" % sensor_id)
 
         data = self.cursor.fetchone()
 
