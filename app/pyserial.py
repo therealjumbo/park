@@ -2,7 +2,6 @@ import serial
 import time
 from time import gmtime, strftime
 import sqlite3
-import os.path as osp
 
 def getcurtime():
     return strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -17,7 +16,7 @@ class Database:
 
     def __enter__(self):
         self.cursor.close()
-        
+
     def __exit__(self):
         self.conn.close()
 
@@ -25,7 +24,7 @@ class Database:
 
         value = 1 if occupied else 0
 
-        stat = "UPDATE parkinglot set value={1},time='{2}' where location={0};".format(sensor_id, 
+        stat = "UPDATE parkinglot set value={1},time='{2}' where location={0};".format(sensor_id,
                                                                                     value,
                                                                                     getcurtime())
         self.cursor.execute(stat)
@@ -39,9 +38,9 @@ value INTEGER,
 time TEXT)""")
 
     def add_sensor(self, sensor_id):
-        
+
         value=0
-        stat = """INSERT INTO parkinglot values ({0}, {1}, '{2}')""".format(sensor_id, 
+        stat = """INSERT INTO parkinglot values ({0}, {1}, '{2}')""".format(sensor_id,
                                                                             value,
                                                                             getcurtime())
         self.cursor.execute(stat)
@@ -49,8 +48,9 @@ time TEXT)""")
 
 
     def read(self, sensor_id):
-        self.cursor.execute("SELECT * FROM parkinglot WHERE location='%s'" % sensor_id)
-        
+        self.cursor.execute("SELECT * FROM parkinglot WHERE '\
+                            'location='%s'" % sensor_id)
+
         data = self.cursor.fetchone()
 
         if data:
@@ -59,7 +59,8 @@ time TEXT)""")
             return (loc, occupied, time)
 
     def read_sensor(self):
-        port = serial.Serial('/dev/ttyUSB0', baudrate=115200, timeout=3.0)
+        port = serial.Serial('/dev/ttyUSB0', baudrate=115200,
+                             timeout=3.0)
         return port.read(3)
 
 
@@ -71,17 +72,23 @@ def read_from_db():
 def main():
     db = Database()
 
-    db.create()
-    db.add_sensor(10001)
-    
+    try:
+        db.create()
+        db.add_sensor(10001)
+    except sqlite3.OperationalError:
+        pass
+
     while True:
         time.sleep(1)
-        #you get 'O' when Occupied, 'F' when free
         val = db.read_sensor()
-        val = val.strip().decode('utf-8')
-        val = True if val == 'O' else False
-        print(val)
-        db.update(10001, val)
+        try:
+            # you get 'O' when Occupied, 'F' when free
+            val = val.strip().decode('utf-8')
+            val = True if val == 'O' else False
+            print(val)
+            db.update(10001, val)
+        except UnicodeDecodeError:
+            pass
 
 
 if __name__ == '__main__':

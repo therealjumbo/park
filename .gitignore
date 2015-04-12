@@ -2,3 +2,4 @@ flask/*
 *.swp
 *__pycache__/
 *.pyc
+*.db
